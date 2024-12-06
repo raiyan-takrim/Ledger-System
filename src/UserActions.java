@@ -6,9 +6,10 @@ import java.util.Scanner;
 
 public class UserActions {
     private static String name, email, password, confirmPassword;
-    static Scanner input = new Scanner(System.in);
+    static Scanner input = new Scanner(System.in);//hello
 
     public static void login() {
+        System.out.println("Login form");
         boolean isValid = false;
         while (!isValid) {
             System.out.println("== Please enter your email and password ==");
