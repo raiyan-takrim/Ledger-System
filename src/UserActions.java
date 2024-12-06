@@ -9,6 +9,7 @@ public class UserActions {
     static Scanner input = new Scanner(System.in);//hello
 
     public static void login() {
+        System.out.println("Login form");
         boolean isValid = false;
         while (!isValid) {
             System.out.println("== Please enter your email and password ==");
