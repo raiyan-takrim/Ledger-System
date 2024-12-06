@@ -2,11 +2,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.sql.Date;
 import java.util.Scanner;
 
 public class UserActions {
-    private static String name, email, password, confirmPassword;
-    static Scanner input = new Scanner(System.in);//hello
+    public static String email;
+    private static String name, password, confirmPassword;
+    static Scanner input = new Scanner(System.in);
 
     public static boolean login() {
         boolean isValid = false;
@@ -65,7 +68,7 @@ public class UserActions {
             boolean isValid;
             System.out.println("== Please fill in the form ==");
 
-            while(true){
+            while (true) {
                 System.out.print("Name: ");
                 name = input.nextLine();
                 isValid = Validation.name(name);
@@ -76,7 +79,7 @@ public class UserActions {
                 break;
             }
 
-            while(true){
+            while (true) {
                 System.out.print("Email: ");
                 email = input.nextLine();
                 isValid = Validation.email(email);
@@ -92,7 +95,7 @@ public class UserActions {
                 break;
             }
 
-            while(true){
+            while (true) {
                 System.out.print("Password: ");
                 password = input.nextLine();
                 isValid = Validation.password(password);
@@ -104,7 +107,7 @@ public class UserActions {
                 break;
             }
 
-            while(true){
+            while (true) {
                 System.out.print("Confirm Password: ");
                 confirmPassword = input.nextLine();
                 if (!password.equals(confirmPassword)) {
@@ -141,4 +144,131 @@ public class UserActions {
 
     }
 
+    public static int getUserID() {
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.getUserID);
+            preSt.setString(1, email);
+            ResultSet result = preSt.executeQuery();
+            if (result.next()) {
+                return result.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static boolean credit(double amount, String description, LocalDate date) {
+        final String type = "credit";
+        int userID = getUserID();
+        if (userID == -1) {
+            System.out.println("User does not exist.");
+            return false;
+
+        }
+
+        Connection conn = DB.connect();
+        try {
+            conn.setAutoCommit(false);
+
+            // Credit amount to user's balance
+            PreparedStatement creditStmt = conn.prepareStatement(Query.makeTransaction);
+            creditStmt.setDouble(1, userID);
+            creditStmt.setString(2, type);
+            creditStmt.setDouble(3, amount);
+            creditStmt.setString(4, description);
+            creditStmt.setDate(5, Date.valueOf(date));
+            creditStmt.executeUpdate();
+
+            conn.commit();
+            updateAccountBalance(userID, amount, type, date);
+            return true;
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static boolean debit(double amount, String description, LocalDate date) {
+        String type = "debit";
+        int userID = getUserID();
+        if (userID == -1) {
+            System.out.println("User does not exist.");
+            return false;
+        }
+
+        Connection conn = DB.connect();
+        try {
+            conn.setAutoCommit(false);
+
+            // Debit amount from user's balance
+            PreparedStatement debitStmt = conn.prepareStatement(Query.makeTransaction);
+            debitStmt.setDouble(1, userID);
+            debitStmt.setString(2, type);
+            debitStmt.setDouble(3, amount);
+            debitStmt.setString(4, description);
+            debitStmt.setDate(5, Date.valueOf(date));
+            debitStmt.executeUpdate();
+
+            conn.commit();
+            amount = getAccountBalance() - amount;
+            updateAccountBalance(userID, amount, type, date);
+            return true;
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private static void updateAccountBalance(int userID, double amount, String type, LocalDate date) {
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.accountBalance);
+            preSt.setInt(1, userID);
+            preSt.setDouble(2, amount);
+            preSt.setDate(3, Date.valueOf(date));
+            preSt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static double getAccountBalance() {
+        int userID = getUserID();
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.getAccountBalance);
+            preSt.setInt(1, userID);
+            ResultSet result = preSt.executeQuery();
+            if (result.next()) {
+                return result.getDouble(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
