@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class UserActions {
     private static String name, email, password, confirmPassword;
-    static Scanner input = new Scanner(System.in);
+    static Scanner input = new Scanner(System.in);//hello
 
     public static void login() {
         boolean isValid = false;
