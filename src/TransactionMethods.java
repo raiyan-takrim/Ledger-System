@@ -35,7 +35,7 @@ public class TransactionMethods {
         System.out.print("Enter Amount: ");
         amount = input.nextDouble();
         System.out.print("Enter description: ");
-        description = input.nextLine();
+        description = input.nextLine();//not more than 100 character plus looping if exceed
         System.out.println("credit Successfully Recorded!!!");
 
     }
