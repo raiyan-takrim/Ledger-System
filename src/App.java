@@ -12,7 +12,6 @@ public class App {
             System.out.println("2. Register");
             System.out.print("> ");
             choice = input.nextInt();
-            input.close();
             if (choice == 1) {
                 UserActions.login();
             } else if (choice == 2) {

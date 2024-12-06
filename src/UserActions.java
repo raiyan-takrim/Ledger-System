@@ -10,7 +10,6 @@ public class UserActions {
 
     public static void login() {
         System.out.println("Login form");
-        System.out.println("another comment");
         boolean isValid = false;
         while (!isValid) {
             System.out.println("== Please enter your email and password ==");
