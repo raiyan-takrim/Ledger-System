@@ -8,9 +8,7 @@ public class UserActions {
     private static String name, email, password, confirmPassword;
     static Scanner input = new Scanner(System.in);//hello
 
-    public static void login() {
-        System.out.println("Login form");
-        System.out.println("another comment");
+    public static boolean login() {
         boolean isValid = false;
         while (!isValid) {
             System.out.println("== Please enter your email and password ==");
@@ -20,7 +18,7 @@ public class UserActions {
             password = input.nextLine();
             isValid = CheckCredential(email, password);
         }
-        System.out.println("Login Successful!!!");
+        return true;
 
     }
 
@@ -62,56 +60,68 @@ public class UserActions {
         return false;
     }
 
-    public static void register() {
+    public static boolean register() {
         while (true) {
             boolean isValid;
             System.out.println("== Please fill in the form ==");
 
-            System.out.print("Name: ");
-            name = input.nextLine();
-            isValid = Validation.name(name);
-            if (!isValid) {
-                System.out.println("Name should be only alphanumeric\n");
-                continue;
-            }
-
-            System.out.print("Email: ");
-            email = input.nextLine();
-            isValid = Validation.email(email);
-            if (!isValid) {
-                System.out.println("Invalid Email\n");
-                continue;
-            }
-            isValid = isUserExists(email);
-            if (isValid) {
-                System.out.println("User already exists!\n");
+            while(true){
+                System.out.print("Name: ");
+                name = input.nextLine();
+                isValid = Validation.name(name);
+                if (!isValid) {
+                    System.out.println("Name should be only alphanumeric\n");
+                    continue;
+                }
                 break;
             }
 
-            System.out.print("Password: ");
-            password = input.nextLine();
-            isValid = Validation.password(password);
-            if (!isValid) {
-                System.out.println(
-                        "Password should contains:\n1. At least 6 character\n2. At least one letter, one special character and one number\n");
-                continue;
+            while(true){
+                System.out.print("Email: ");
+                email = input.nextLine();
+                isValid = Validation.email(email);
+                if (!isValid) {
+                    System.out.println("Invalid Email\n");
+                    continue;
+                }
+                isValid = isUserExists(email);
+                if (isValid) {
+                    System.out.println("User already exists!\n");
+                    break;
+                }
+                break;
             }
 
-            System.out.print("Confirm Password: ");
-            confirmPassword = input.nextLine();
-            if (!password.equals(confirmPassword)) {
-                System.out.println("Password not matched!\n");
-                continue;
+            while(true){
+                System.out.print("Password: ");
+                password = input.nextLine();
+                isValid = Validation.password(password);
+                if (!isValid) {
+                    System.out.println(
+                            "Password should contains:\n1. At least 6 character\n2. At least one letter, one special character and one number\n");
+                    continue;
+                }
+                break;
+            }
+
+            while(true){
+                System.out.print("Confirm Password: ");
+                confirmPassword = input.nextLine();
+                if (!password.equals(confirmPassword)) {
+                    System.out.println("Password not matched!\n");
+                    continue;
+                }
+                break;
             }
 
             boolean isSuccessfull = UserActions.setUser(name, email, password);
             if (isSuccessfull) {
-                System.out.println("Register Successfull!!!\n");
                 break;
             } else {
                 System.out.println("Someting went wrong!\n");
             }
         }
+        return true;
     }
 
     private static boolean setUser(String name, String email, String password) {
@@ -125,7 +135,6 @@ public class UserActions {
 
             return true;
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             return false;
         }
