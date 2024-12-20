@@ -31,8 +31,8 @@ public class Screens {
 
     public static void UserProfile() {
         Scanner input = new Scanner(System.in);
-
-        System.out.println("\n== Welcome, " + " ==");
+        String userName = UserActions.getUserName();
+        System.out.println("\n== Welcome, " + userName + " ==");
         System.out.print("Balance: ");
         double balance = UserActions.getAccountBalance();
         System.out.println(balance);

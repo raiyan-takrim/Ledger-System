@@ -127,6 +127,47 @@ public class UserActions {
         return true;
     }
 
+
+    private static void setSavings(int userID, String status, double percentage, double savedBalance) {
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.setSavings);
+            preSt.setInt(1, userID);
+            preSt.setString(2, status);
+            preSt.setDouble(3, percentage);
+            preSt.setDouble(4, savedBalance);
+            preSt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static double getSavedBalance() {
+        int userID = getUserID();
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.getSaved);
+            preSt.setInt(1, userID);
+            ResultSet result = preSt.executeQuery();
+            if (result.next()) {
+                return result.getDouble(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static boolean setSavingsForCurrentUser(String status, double percentage, double savedBalance) {
+        int userID = getUserID();
+        if (userID == -1) {
+            System.out.println("User does not exist.");
+            return false;
+        }
+        setSavings(userID, status, percentage, savedBalance);
+        return true;
+    }
+
     private static boolean setUser(String name, String email, String password) {
         Connection conn = DB.connect();
         try {
@@ -135,13 +176,27 @@ public class UserActions {
             preSt.setString(2, email);
             preSt.setString(3, password);
             preSt.executeUpdate();
-
+            setSavings(getUserID(), "inactive", 0.0, 0.0);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
 
+    }
+    public static String getUserName(){
+        Connection conn = DB.connect();
+        try{
+            PreparedStatement preSt = conn.prepareStatement(Query.getUserName);
+            preSt.setString(1, email);
+            ResultSet result = preSt.executeQuery();
+            if(result.next()){
+                return result.getString(1);
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static int getUserID() {
@@ -271,4 +326,5 @@ public class UserActions {
         }
         return 0;
     }
+
 }

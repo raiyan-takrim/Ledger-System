@@ -12,4 +12,7 @@ public class Query {
     static String getBank = "SELECT * FROM banks";
     static String accountBalance = "INSERT INTO account_balance (user_id, balance, date) VALUES (?, ?, ?)";
     static String getAccountBalance = "SELECT balance FROM account_balance WHERE user_id = ? ORDER BY last_update_timestamp DESC LIMIT 1";
+    static String getUserName = "SELECT name FROM users WHERE email = ?";
+    static String setSavings = "INSERT INTO savings (user_id, status, percentage, saved_balance) VALUES (?, ?, ?, ?)"; 
+    static String getSaved = "SELECT saved_balance FROM savings WHERE user_id = ?";
 }
