@@ -60,6 +60,7 @@ public class Screens {
                 UserProfile();
                 break;
             case 3:
+                TransactionMethods.history();
                 UserProfile();
                 break;
             case 4:

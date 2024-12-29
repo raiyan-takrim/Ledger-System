@@ -1,6 +1,8 @@
+import java.io.FileWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Scanner;
 
 public class TransactionMethods {
@@ -64,8 +66,16 @@ public class TransactionMethods {
         System.out.print("Enter Amount: ");
         amount = input.nextDouble();
         input.nextLine(); // Consume the newline character
-        System.out.print("Enter description: ");
-        description = input.nextLine();// not more than 100 character plus looping if exceed
+        while (true) {
+            System.out.print("Enter description: ");
+            description = input.nextLine();
+            if (description.length() > 100) {
+                System.out.println("Description is too long. Please enter a description with at most 100 characters.");
+            } else {
+                break;
+            }
+
+        }
         LocalDate date = getDateFromUser();
         boolean result = UserActions.credit(amount, description, date);
         if (result) {
@@ -90,5 +100,38 @@ public class TransactionMethods {
         }
         System.out.println("Date: " + date);
         return date;
+    }
+
+    public static void history(){
+        System.out.println("== Transaction History ==");
+
+        List<Transaction> transactions = UserActions.getTransactionHistory();
+        if (transactions.isEmpty()) {
+            System.out.println("No transactions found.");
+        } else {
+            System.out.printf("%-15s%-20s%-15s%-15s%-15s\n", "Date", "Description", "Debit", "Credit", "Balance");
+            for (Transaction transaction : transactions) {
+                if(transaction.getType().equals("debit")){
+                    System.out.printf("%-15s%-20s%-15s%-15s%-15s\n", transaction.getDate(), transaction.getDescription(), transaction.getAmount(), "0.0", transaction.getUpdatedAmount());
+                }else{
+                    System.out.printf("%-15s%-20s%-15s%-15s%-15s\n", transaction.getDate(), transaction.getDescription(), "0.0", transaction.getAmount(), transaction.getUpdatedAmount());
+                }
+            }
+
+            try(FileWriter csvWriter = new FileWriter("transaction_history.csv")) {
+                csvWriter.append("Date,Description,Debit,Credit,Balance\n");
+                for (Transaction transaction : transactions) {
+                    if(transaction.getType().equals("debit")){
+                        csvWriter.append(transaction.getDate() + "," + transaction.getDescription() + "," + transaction.getAmount() + ",0.0," + transaction.getUpdatedAmount() + "\n");
+                    }else{
+                        csvWriter.append(transaction.getDate() + "," + transaction.getDescription() + ",0.0," + transaction.getAmount() + "," + transaction.getUpdatedAmount() + "\n");
+                    }
+                }
+                csvWriter.flush();
+                System.out.println("Transaction history has been saved to transaction_history.csv");
+            } catch (Exception e) {
+                System.out.println("An error occurred while writing to the file.");
+            }
+        }
     }
 }

@@ -4,11 +4,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class UserActions {
     public static String email;
-    private static String name, password, confirmPassword;
+    public static String name, password, confirmPassword;
     static Scanner input = new Scanner(System.in);
 
     public static boolean login() {
@@ -22,7 +24,6 @@ public class UserActions {
             isValid = CheckCredential(email, password);
         }
         return true;
-
     }
 
     private static boolean CheckCredential(String email, String password) {
@@ -142,6 +143,21 @@ public class UserActions {
         }
     }
 
+    public static String getSavingsStatus() {
+        int userID = getUserID();
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.get_savings_status);
+            preSt.setInt(1, userID);
+            ResultSet result = preSt.executeQuery();
+            if (result.next()) {
+                return result.getString(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     public static double getSavedBalance() {
         int userID = getUserID();
         Connection conn = DB.connect();
@@ -177,12 +193,25 @@ public class UserActions {
             preSt.setString(3, password);
             preSt.executeUpdate();
             setSavings(getUserID(), "inactive", 0.0, 0.0);
+            setAccountBalance(getUserID(), 0.0);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
 
+    }
+
+    private static void setAccountBalance(int userID, double balance) {
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.account_balance);
+            preSt.setInt(1, userID);
+            preSt.setDouble(2, balance);
+            preSt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     public static String getUserName(){
         Connection conn = DB.connect();
@@ -228,16 +257,18 @@ public class UserActions {
             conn.setAutoCommit(false);
 
             // Credit amount to user's balance
+            double updatedAmount = getAccountBalance() + amount;
             PreparedStatement creditStmt = conn.prepareStatement(Query.makeTransaction);
             creditStmt.setDouble(1, userID);
             creditStmt.setString(2, type);
             creditStmt.setDouble(3, amount);
             creditStmt.setString(4, description);
             creditStmt.setDate(5, Date.valueOf(date));
+            creditStmt.setDouble(6, updatedAmount);
             creditStmt.executeUpdate();
 
             conn.commit();
-            updateAccountBalance(userID, amount, type, date);
+            updateAccountBalance(userID, updatedAmount);
             return true;
         } catch (SQLException e) {
             try {
@@ -267,7 +298,8 @@ public class UserActions {
         Connection conn = DB.connect();
         try {
             conn.setAutoCommit(false);
-
+            
+            double updatedAmount = getAccountBalance() - amount;
             // Debit amount from user's balance
             PreparedStatement debitStmt = conn.prepareStatement(Query.makeTransaction);
             debitStmt.setDouble(1, userID);
@@ -275,11 +307,11 @@ public class UserActions {
             debitStmt.setDouble(3, amount);
             debitStmt.setString(4, description);
             debitStmt.setDate(5, Date.valueOf(date));
+            debitStmt.setDouble(6, updatedAmount);
             debitStmt.executeUpdate();
 
             conn.commit();
-            amount = getAccountBalance() - amount;
-            updateAccountBalance(userID, amount, type, date);
+            updateAccountBalance(userID, updatedAmount);
             return true;
         } catch (SQLException e) {
             try {
@@ -298,13 +330,13 @@ public class UserActions {
         }
     }
 
-    private static void updateAccountBalance(int userID, double amount, String type, LocalDate date) {
+    private static void updateAccountBalance(int userID, double amount) {
         Connection conn = DB.connect();
         try {
-            PreparedStatement preSt = conn.prepareStatement(Query.accountBalance);
-            preSt.setInt(1, userID);
-            preSt.setDouble(2, amount);
-            preSt.setDate(3, Date.valueOf(date));
+            PreparedStatement preSt = conn.prepareStatement(Query.update_account_balance);
+            preSt.setDouble(1, amount);
+            preSt.setInt(2, userID);
+            // preSt.setDate(3, Date.valueOf(date));
             preSt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -315,7 +347,7 @@ public class UserActions {
         int userID = getUserID();
         Connection conn = DB.connect();
         try {
-            PreparedStatement preSt = conn.prepareStatement(Query.getAccountBalance);
+            PreparedStatement preSt = conn.prepareStatement(Query.get_account_balance);
             preSt.setInt(1, userID);
             ResultSet result = preSt.executeQuery();
             if (result.next()) {
@@ -325,6 +357,39 @@ public class UserActions {
             e.printStackTrace();
         }
         return 0;
+    }
+    
+    public static List<Transaction> getTransactionHistory() {
+        int userId = getUserID();
+        List<Transaction> transactions = new ArrayList<>();
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement("SELECT * FROM transactions WHERE user_id = ?");
+            preSt.setInt(1, userId);
+            ResultSet result = preSt.executeQuery();
+            while (result.next()) {
+                Transaction transaction = new Transaction();
+                transaction.setTransactionID(result.getInt("transaction_id"));
+                transaction.setUserId(result.getInt("user_id"));
+                transaction.setType(result.getString("transaction_type"));
+                transaction.setAmount(result.getDouble("amount"));
+                transaction.setDate(result.getDate("date"));
+                transaction.setDescription(result.getString("description"));
+                transaction.setUpdatedAmount(result.getDouble("updated_amount"));
+                transactions.add(transaction);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return transactions;
     }
 
 }

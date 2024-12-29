@@ -3,16 +3,20 @@ public class Query {
     static String addUser = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
     static String userExists = "SELECT COUNT(*) FROM users WHERE email = ?";
     static String getPassword = "SELECT password from users WHERE email = ?";
-    static String makeTransaction = "INSERT INTO transactions (user_id, transaction_type, amount, description, date) VALUES (?, ?, ?, ?, ?)";
+    static String makeTransaction = "INSERT INTO transactions (user_id, transaction_type, amount, description, date, updated_amount) VALUES (?, ?, ?, ?, ?, ?)";
     static String savings = "INSERT INTO savings (user_id, status, percentage) VALUES (?, ?, ?)";
     static String getSaving = "SELECT * FROM savings WHERE user_id = ?";
     static String loans = "INSERT INTO loans (user_id, principal_amount, interest_rate, repayment_period, outstanding_balance, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
     static String getLoan = "SELECT * FROM loans WHERE user_id = ?";
     static String bank = "INSERT INTO banks (bank_name, interest_rate) VALUES (?, ?)";
     static String getBank = "SELECT * FROM banks";
-    static String accountBalance = "INSERT INTO account_balance (user_id, balance, date) VALUES (?, ?, ?)";
-    static String getAccountBalance = "SELECT balance FROM account_balance WHERE user_id = ? ORDER BY last_update_timestamp DESC LIMIT 1";
+    // static String accountBalance = "INSERT INTO account_balance (user_id, balance, date) VALUES (?, ?, ?)";
+    // static String getAccountBalance = "SELECT balance FROM account_balance WHERE user_id = ? ORDER BY last_update_timestamp DESC LIMIT 1";
+    static String account_balance = "INSERT INTO account_balance (user_id, balance) VALUES (?, ?)";
+    static String update_account_balance = "UPDATE account_balance SET balance = ? WHERE user_id = ?";
+    static String get_account_balance = "SELECT balance FROM account_balance WHERE user_id = ?"; 
     static String getUserName = "SELECT name FROM users WHERE email = ?";
     static String setSavings = "INSERT INTO savings (user_id, status, percentage, saved_balance) VALUES (?, ?, ?, ?)"; 
     static String getSaved = "SELECT saved_balance FROM savings WHERE user_id = ?";
+    static String get_savings_status = "SELECT status FROM savings WHERE user_id = ?";
 }
