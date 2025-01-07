@@ -257,7 +257,7 @@ public class UserActions {
             conn.setAutoCommit(false);
 
             // Credit amount to user's balance
-            double updatedAmount = getAccountBalance() - amount;
+            double updatedAmount = getAccountBalance() + amount;
             PreparedStatement creditStmt = conn.prepareStatement(Query.makeTransaction);
             creditStmt.setDouble(1, userID);
             creditStmt.setString(2, type);
@@ -299,7 +299,7 @@ public class UserActions {
         try {
             conn.setAutoCommit(false);
             
-            double updatedAmount = getAccountBalance() + amount;
+            double updatedAmount = getAccountBalance() - amount;
             // Debit amount from user's balance
             PreparedStatement debitStmt = conn.prepareStatement(Query.makeTransaction);
             debitStmt.setDouble(1, userID);

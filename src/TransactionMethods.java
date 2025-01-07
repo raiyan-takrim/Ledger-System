@@ -29,17 +29,13 @@ public class TransactionMethods {
     public static void debit() {
         System.out.println("== Debit ==");
         while (true) {
-            double balance = UserActions.getAccountBalance();
-            System.out.print("Enter Amount: ");// ensure there are positive and there's limit
+            System.out.print("Enter Amount: ");
             amount = input.nextDouble();
             input.nextLine();
-            if (balance < amount) {
-                System.out.println("Insufficient balance. Please enter an amount less than or equal to your balance.");
-            } else if (amount <= 0) {
+            if (amount <= 0) {
                 System.out.println("Invalid amount. Please enter a positive amount.");
             } else
                 break;
-
         }
         while (true) {
             System.out.print("Enter description: ");
@@ -63,8 +59,17 @@ public class TransactionMethods {
 
     public static void credit() {
         System.out.println("== Credit ==");
-        System.out.print("Enter Amount: ");
-        amount = input.nextDouble();
+        double balance = UserActions.getAccountBalance();
+        while (true) {
+            System.out.print("Enter Amount: ");
+            amount = input.nextDouble();
+            if (balance < amount) {
+                System.out.println("Insufficient balance. Please enter an amount less than or equal to your balance.");
+            } else if (amount <= 0) {
+                System.out.println("Invalid amount. Please enter a positive amount.");
+            } else
+                break;
+        }
         input.nextLine(); // Consume the newline character
         while (true) {
             System.out.print("Enter description: ");
@@ -98,7 +103,7 @@ public class TransactionMethods {
                 System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
             }
         }
-        System.out.println("Date: " + date);
+        //System.out.println("Date: " + date);
         return date;
     }
 
@@ -131,6 +136,60 @@ public class TransactionMethods {
                 System.out.println("Transaction history has been saved to transaction_history.csv");
             } catch (Exception e) {
                 System.out.println("An error occurred while writing to the file.");
+            }
+        }
+    }
+
+    public static void depositInterestPredictor() {
+        double accBalance = UserActions.getAccountBalance();
+        int choice;
+        double interest;
+        System.out.printf("%-22s %-20s\n", "Bank", "Interest Rate(%)");
+        System.out.println("-------------------------------------------------");
+        System.out.printf("%-22s %-20s%n", "1.RHB", "2.6");
+        System.out.printf("%-22s %-20s%n", "2.Maybank", "2.5");
+        System.out.printf("%-22s %-20s%n", "3.Hong Leong", "2.3");
+        System.out.printf("%-22s %-20s%n", "4.Alliance", "2.85");
+        System.out.printf("%-22s %-20s%n", "5.AmBank", "2.55");
+        System.out.printf("%-22s %-20s%n", "6.Standard Chartered", "2.65");
+
+        System.out.print("Input desired bank : ");
+        choice = input.nextInt();
+
+        switch (choice) {
+            case 1: {
+                interest = (accBalance * 2.6) / 12;
+                System.out.printf("Monthly interest : RM%.2f%n", interest);
+                break;
+            }
+            case 2: {
+                interest = (accBalance * 2.5) / 12;
+                System.out.printf("Monthly interest : RM%.2f%n", interest);
+                break;
+            }
+            case 3: {
+                interest = (accBalance * 2.3) / 12;
+                System.out.printf("Monthly interest : RM%.2f%n", interest);
+                break;
+            }
+            case 4: {
+                interest = (accBalance * 2.85) / 12;
+                System.out.printf("Monthly interest : RM%.2f%n", interest);
+                break;
+            }
+            case 5: {
+                interest = (accBalance * 2.55) / 12;
+                System.out.printf("Monthly interest : RM%.2f%n", interest);
+                break;
+            }
+            case 6: {
+                interest = (accBalance * 2.65) / 12;
+                System.out.printf("Monthly interest : RM%.2f%n", interest);
+                break;
+            }
+            default: {
+                System.out.println("Invalid input.");
+                break;
             }
         }
     }

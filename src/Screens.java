@@ -71,6 +71,7 @@ public class Screens {
                 UserProfile();
                 break;
             case 6:
+                TransactionMethods.depositInterestPredictor();
                 UserProfile();
                 break;
             case 7:
