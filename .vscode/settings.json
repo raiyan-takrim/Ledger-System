@@ -1,10 +1,15 @@
 {
   "java.project.sourcePaths": ["src"],
   "java.project.outputPath": "bin",
-  "java.project.referencedLibraries": [
-    "lib/**/*.jar",
-    "c:\\Users\\raiya\\Downloads\\postgresql-42.7.4.jar",
-    "c:\\Users\\rayya\\Downloads\\postgresql-42.7.4.jar",
-    "c:\\Users\\deena\\Downloads\\postgresql-42.7.4.jar"
-  ]
+  "java.project.referencedLibraries": {
+    "include": [
+      "lib/**/*.jar",
+      "c:\\Users\\rayya\\Downloads\\postgresql-42.7.4.jar",
+      "c:\\Users\\deena\\Downloads\\postgresql-42.7.4.jar",
+      "c:\\Users\\raiya\\Downloads\\postgresql-42.7.4.jar"
+    ],
+    "exclude": [
+      "lib/postgresql-42.7.4.jar"
+    ]
+  }
 }
