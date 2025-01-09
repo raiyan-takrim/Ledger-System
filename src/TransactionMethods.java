@@ -6,25 +6,9 @@ import java.util.List;
 import java.util.Scanner;
 
 public class TransactionMethods {
-
-    private static char decision;
+    private static Scanner input = new Scanner(System.in);
     private static double percentage, amount;
     private static String description;
-    static Scanner input = new Scanner(System.in);
-
-    public static void savings() {
-        System.out.println("== Savings ==");
-        System.out.print("Are you sure you want to activate it? (Y/N) : ");
-        decision = input.next().charAt(0);
-        if (decision == 'Y') {
-            System.out.print("\nPlease enter the percentage you wish to deduct from the next debit: ");
-            percentage = input.nextDouble();
-            input.nextLine(); // Consume the newline character
-            System.out.println("Savings settings added successfully!!!");
-        }
-        System.out.println("Savings Settings not added");
-
-    }
 
     public static void debit() {
         System.out.println("== Debit ==");
@@ -103,10 +87,54 @@ public class TransactionMethods {
                 System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
             }
         }
-        //System.out.println("Date: " + date);
         return date;
     }
 
+    public static void savings() {
+        int userID = UserActions.getUserID(); // Get the current user's ID
+        if (userID == -1) {
+            System.out.println("User  does not exist.");
+            return;
+        }
+
+        // Check if savings are already activated
+        double currentPercentage = UserActions.getCurrentSavingsPercentage(userID);
+        boolean status = UserActions.getSavingsStatus();
+        if (status) {
+            System.out.println("== Savings ==");
+            System.out.println("Current savings percentage: " + currentPercentage + "%");
+            System.out.print("Do you want to change the percentage? (Y/N): ");
+            char decision = input.next().charAt(0);
+            input.nextLine(); // Consume the newline character
+
+            if (decision == 'Y' || decision == 'y') {
+                System.out.print("Please enter the new percentage you wish to deduct from the next debit: ");
+                percentage = input.nextDouble();
+                input.nextLine(); // Consume the newline character
+                UserActions.updateSavingsPercentage(userID, percentage);
+                System.out.println("Savings percentage updated successfully!!!");
+            } else {
+                System.out.println("Savings settings remain unchanged.");
+            }
+        } else{
+            // If savings are not activated, allow the user to activate it
+            System.out.println("== Savings ==");
+            System.out.print("Are you sure you want to activate it? (Y/N): ");
+            char decision = input.next().charAt(0);
+            input.nextLine(); // Consume the newline character
+
+            if (decision == 'Y' || decision == 'y') {
+                System.out.print("Please enter the percentage you wish to deduct from the next debit: ");
+                percentage = input.nextDouble();
+                input.nextLine(); // Consume the newline character
+                UserActions.setSavingsStatusAndPercentage("active", percentage);
+                System.out.println("Savings activated successfully!!!");
+            } else {
+                System.out.println("Savings settings not added.");
+            }
+        }
+    }
+    
     public static void history(){
         System.out.println("== Transaction History ==");
 
@@ -191,6 +219,86 @@ public class TransactionMethods {
                 System.out.println("Invalid input.");
                 break;
             }
+        }
+    }
+
+    public static void creditLoan() {
+        System.out.println("== Credit Loan ==");
+        System.out.println("1. Apply for Loan");
+        System.out.println("2. Repay Loan");
+        System.out.print("> ");
+        int choice = input.nextInt();
+        input.nextLine(); // Consume the newline character
+
+        switch (choice) {
+            case 1:
+                if (UserActions.isLoanActive()) {
+                    System.out.println("You already have an active loan. Please repay the existing loan before applying for a new one.");
+                    return;
+                    
+                }
+                applyForLoan();
+                break;
+            case 2:
+                if (!UserActions.isLoanActive()) {
+                    System.out.println("You do not have an active loan.");
+                    break;
+                }
+                repayLoan();
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                creditLoan();
+                break;
+        }
+    }
+
+    private static void applyForLoan() {
+        System.out.println("== Apply for Loan ==");
+        System.out.print("Enter principal amount: ");
+        double principal = input.nextDouble();
+        System.out.print("Enter interest rate (in %): ");
+        double interestRate = input.nextDouble();
+        System.out.print("Enter repayment period (in months): ");
+        int repaymentPeriod = input.nextInt();
+        input.nextLine(); // Consume the newline character
+
+        UserActions.applyLoan(principal, interestRate, repaymentPeriod);
+    }
+
+    private static void repayLoan() {
+        System.out.println("== Repay Loan ==");
+        double outstandingBalance = UserActions.getOutstandingBalance();
+        System.out.println("Outstanding balance: " + outstandingBalance);
+        double monthlyInstallment = UserActions.getMonthlyInstallment();
+        System.out.println("Monthly installment: " + monthlyInstallment);
+        if (UserActions.getOverdueInstallments() > 0) {
+            System.out.println("NOTICE: You have overdue installments. Your transactions are currently suspended!");
+            System.out.println("Overdue installments: " + UserActions.getOverdueInstallments() + " months");
+            monthlyInstallment *= UserActions.getOverdueInstallments();
+        }
+        System.out.println("1. Repay full loan");
+        if (UserActions.getOverdueInstallments() > 0) {
+            System.out.println("2. Repay (overdue + current) installments");
+            
+        }else
+            System.out.println("2. Repay monthly installment");
+
+        System.out.print("> ");
+        int choice = input.nextInt();
+        input.nextLine(); // Consume the newline character
+
+        switch (choice) {
+            case 1:
+                UserActions.repayLoan(outstandingBalance);
+                break;
+            case 2:
+                UserActions.repayLoan(monthlyInstallment);
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                repayLoan();
+                break;
         }
     }
 }
