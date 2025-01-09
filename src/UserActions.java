@@ -322,7 +322,7 @@ public class UserActions {
 
     public static void transferSavings(){
         LocalDate date = LocalDate.now();
-        int dayOfMonth = 31;
+        int dayOfMonth = date.getDayOfMonth();
         int daysInMonth = date.lengthOfMonth();
         if (dayOfMonth == daysInMonth) {
             double savedBalance = getSavedBalance();

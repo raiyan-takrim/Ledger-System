@@ -1,11 +1,9 @@
 Date,Description,Debit,Credit,Balance
-2025-01-09,initial balance,1000.0,0.0,1000.0
-2025-01-09,Lunch,0.0,10.0,990.0
-2025-01-09,Loan disbursement,3000.0,0.0,3990.0
-2025-01-09,Loan Payment,0.0,393.75,3596.25
-2025-01-09,another deposit,100.0,0.0,3696.25
-2025-01-09,Added to savings,0.0,10.0,3686.25
-2025-01-09,Loan Payment,0.0,2756.25,930.0
-2025-01-09,Loan disbursement,2000.0,0.0,2930.0
-2025-01-09,Added to savings,0.0,200.0,2730.0
-2025-01-09,Savings transfer,210.0,0.0,2940.0
+2025-01-09,Pocket Money,1000.0,0.0,1000.0
+2025-01-09,Dinner in Cafe,0.0,10.0,990.0
+2025-01-10,Loan disbursement,10000.0,0.0,10990.0
+2025-01-10,Loan Payment,0.0,1050.0,9940.0
+2025-01-09,From Sale,500.0,0.0,10440.0
+2025-01-09,From Sell,500.0,0.0,10440.0
+2025-01-09,Added to savings,0.0,50.0,10390.0
+2025-01-10,Savings transfer,50.0,0.0,10440.0
