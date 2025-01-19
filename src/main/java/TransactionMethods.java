@@ -1,4 +1,5 @@
 import java.io.FileWriter;
+import java.net.Socket;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -10,6 +11,9 @@ public class TransactionMethods {
     private static double percentage, amount;
     private static String description;
 
+    //======================================
+    //              Debit                 //
+    //======================================
     public static void debit() {
         System.out.println("== Debit ==");
         while (true) {
@@ -31,7 +35,7 @@ public class TransactionMethods {
             }
 
         }
-        LocalDate date = getDateFromUser();
+        LocalDate date = getDateFromUser(null);
         boolean result = UserActions.debit(amount, description, date);
         if (result) {
             System.out.println("Debit Successfully Recorded!!!");
@@ -41,6 +45,9 @@ public class TransactionMethods {
 
     }
 
+    //======================================
+    //              Credit                //
+    //======================================
     public static void credit() {
         System.out.println("== Credit ==");
         double balance = UserActions.getAccountBalance();
@@ -65,7 +72,7 @@ public class TransactionMethods {
             }
 
         }
-        LocalDate date = getDateFromUser();
+        LocalDate date = getDateFromUser(null);
         boolean result = UserActions.credit(amount, description, date);
         if (result) {
             System.out.println("Credit Successfully Recorded!!!");
@@ -75,11 +82,14 @@ public class TransactionMethods {
         }
     }
 
-    private static LocalDate getDateFromUser() {
+    private static LocalDate getDateFromUser(String message) {
+        if (message == null) {
+            message = "Enter date (yyyy-MM-dd): ";
+        }
         LocalDate date = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (date == null) {
-            System.out.print("Enter date (yyyy-MM-dd): ");
+            System.out.print(message);
             String dateString = input.nextLine();
             try {
                 date = LocalDate.parse(dateString, formatter);
@@ -90,6 +100,10 @@ public class TransactionMethods {
         return date;
     }
 
+
+    // ==========================================
+    //              Savings                    //
+    // ==========================================
     public static void savings() {
         int userID = UserActions.getUserID(); // Get the current user's ID
         if (userID == -1) {
@@ -134,11 +148,110 @@ public class TransactionMethods {
             }
         }
     }
-    
+
+    // ==========================================
+    //              History                     //
+    // ==========================================
     public static void history(){
         System.out.println("== Transaction History ==");
 
-        List<Transaction> transactions = UserActions.getTransactionHistory();
+        List<Transaction> transactions = UserActions.getTransactionHistory(null, null, null, 0, 0, null, true);
+
+        printTransactionHistory(transactions);
+        exportHistory(transactions);
+
+        int choice;
+        System.out.println("1. Sort");
+        System.out.println("2. Filter");
+        System.out.println("3. Exit");
+        System.out.print("> ");
+        choice = input.nextInt();
+        input.nextLine(); // Consume the newline character
+
+        switch (choice) {
+            case 1:
+                System.out.println("1. Sort by date");
+                System.out.println("2. Sort by amount");
+                System.out.println("3. Exit");
+                System.out.print("> ");
+                int sortChoice = input.nextInt();
+                input.nextLine(); // Consume the newline character
+                switch (sortChoice) {
+                    case 1:
+                        transactions = UserActions.getTransactionHistory_SortByDate();
+                        break;
+                    case 2:
+                        transactions = UserActions.getTransactionHistory_SortByAmount();
+                        break;
+                    case 3:
+                        return;                
+                    default:
+                        System.out.println("Wrong choice. Please try again.");
+                        history();
+                        break;
+                }
+                break;
+            case 2:
+                System.out.println("1. Filter by date");
+                System.out.println("2. Filter by amount");
+                System.out.println("3. Filter by type");
+                System.out.println("4. Exit");
+                System.out.print("> ");
+                int filterChoice = input.nextInt();
+                input.nextLine(); // Consume the newline character
+                switch (filterChoice) {
+                    case 1:
+                        LocalDate startDate = getDateFromUser("Enter start date (yyyy-MM-dd): ");
+                        LocalDate endDate = getDateFromUser("Enter end date (yyyy-MM-dd): ");
+                        transactions = UserActions.getTransactionHistory(startDate, endDate, null,0,0,null,true);
+                        break;
+                    case 2:
+                        System.out.print("Enter minimum amount: ");
+                        double minAmount = input.nextDouble();
+                        System.out.print("Enter maximum amount: ");
+                        double maxAmount = input.nextDouble();
+                        transactions = UserActions.getTransactionHistory(null, null, null,minAmount,maxAmount,null,true);
+                        break;
+                    case 3:
+                        System.out.println("1. Debit");
+                        System.out.println("2. Credit");
+                        System.out.print("> ");
+                        int typeChoice = input.nextInt();
+                        input.nextLine(); // Consume the newline character
+                        String type;
+                        switch (typeChoice) {
+                            case 1:
+                                type = "debit";
+                                break;
+                            case 2:
+                                type = "credit";
+                                break;
+                            default:
+                                System.out.println("Invalid choice. Please try again.");
+                                history();
+                                return;
+                        }
+                        transactions = UserActions.getTransactionHistory(null, null, type,0,0,null,true);
+                        break;
+                    case 4:
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                        history();
+                }
+                break;
+            case 3:
+                return;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                history();
+                break;
+        }
+        printTransactionHistory(transactions);
+        exportHistory(transactions);
+    }
+
+    static void printTransactionHistory(List<Transaction> transactions) {
         if (transactions.isEmpty()) {
             System.out.println("No transactions found.");
         } else {
@@ -150,23 +263,33 @@ public class TransactionMethods {
                     System.out.printf("%-15s%-20s%-15s%-15s%-15s\n", transaction.getDate(), transaction.getDescription(), "0.0", transaction.getAmount(), transaction.getUpdatedAmount());
                 }
             }
-
-            try(FileWriter csvWriter = new FileWriter("transaction_history.csv")) {
-                csvWriter.append("Date,Description,Debit,Credit,Balance\n");
-                for (Transaction transaction : transactions) {
-                    if(transaction.getType().equals("debit")){
-                        csvWriter.append(transaction.getDate() + "," + transaction.getDescription() + "," + transaction.getAmount() + ",0.0," + transaction.getUpdatedAmount() + "\n");
-                    }else{
-                        csvWriter.append(transaction.getDate() + "," + transaction.getDescription() + ",0.0," + transaction.getAmount() + "," + transaction.getUpdatedAmount() + "\n");
-                    }
-                }
-                csvWriter.flush();
-                System.out.println("Transaction history has been saved to transaction_history.csv");
-            } catch (Exception e) {
-                System.out.println("An error occurred while writing to the file.");
-            }
         }
     }
+
+    static void exportHistory(List<Transaction> transactions) {
+        try (FileWriter csvWriter = new FileWriter("transaction_history.csv")) {
+            csvWriter.append("Date,Description,Debit,Credit,Balance\n");
+            for (Transaction transaction : transactions) {
+                if (transaction.getType().equals("debit")) {
+                    csvWriter.append(transaction.getDate() + "," + transaction.getDescription() + ","
+                            + transaction.getAmount() + ",0.0," + transaction.getUpdatedAmount() + "\n");
+                } else {
+                    csvWriter.append(transaction.getDate() + "," + transaction.getDescription() + ",0.0,"
+                            + transaction.getAmount() + "," + transaction.getUpdatedAmount() + "\n");
+                }
+            }
+            csvWriter.flush();
+            System.out.println("Transaction history has been saved to transaction_history.csv");
+        } catch (Exception e) {
+            System.out.println("An error occurred while writing to the file.");
+        }
+    }
+
+
+
+    // ==========================================
+    //      Deposit Interest Predictor          //
+    // ==========================================
 
     public static void depositInterestPredictor() {
         double accBalance = UserActions.getAccountBalance();
@@ -222,6 +345,9 @@ public class TransactionMethods {
         }
     }
 
+    //==========================================
+    //              Credit Loan               //
+    //==========================================
     public static void creditLoan() {
         System.out.println("== Credit Loan ==");
         System.out.println("1. Apply for Loan");
@@ -235,7 +361,7 @@ public class TransactionMethods {
                 if (UserActions.isLoanActive()) {
                     System.out.println("You already have an active loan. Please repay the existing loan before applying for a new one.");
                     return;
-                    
+
                 }
                 applyForLoan();
                 break;
@@ -280,7 +406,7 @@ public class TransactionMethods {
         System.out.println("1. Repay full loan");
         if (UserActions.getOverdueInstallments() > 0) {
             System.out.println("2. Repay (overdue + current) installments");
-            
+
         }else
             System.out.println("2. Repay monthly installment");
 

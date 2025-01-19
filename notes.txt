@@ -1,2 +1,0 @@
-1. UserActions.getSavedBalance() => savings balance
-2. setSavingsForCurrentUser(String status, double percentage, double savedBalance) => boolean, if success then true else false && status = "active" | "inactive", percentage = parcentage of the savings that user selected, savedBalance = the value after calculating the savings ammount. e.g percentage = 10%, debit = 100RM, (100 * 10)/100 = 10 and this 10 is the savedBalance

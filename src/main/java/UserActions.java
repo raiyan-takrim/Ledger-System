@@ -54,30 +54,35 @@ public class UserActions {
             email = input.nextLine();
             System.out.print("Password: ");
             password = input.nextLine();
-            isValid = CheckCredential(email, password);
+            if (isUserExists(email)) {
+                isValid = CheckCredential(email, password);
+                if (!isValid) {
+                    System.out.println("Wrong Credential!\n");
+                }
+            } else {
+                System.out.println("Sorry, user not exists.\n");
+                return false;
+            }
         }
         return true;
     }
 
     private static boolean CheckCredential(String email, String password) {
-        boolean exists = isUserExists(email);
-        if (exists) {
-            try {
-                Connection conn = DB.connect();
-                PreparedStatement preSt = conn.prepareStatement(Query.getPassword);
-                preSt.setString(1, email);
-                ResultSet result = preSt.executeQuery();
-                if (result.next()) {
-                    if (result.getString(1).equals(password)) {
-                        return true;
-                    } else
-                        System.out.println("Wrong Credential!\n");
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
+        try {
+            Connection conn = DB.connect();
+            PreparedStatement preSt = conn.prepareStatement(Query.getPassword);
+            preSt.setString(1, email);
+            ResultSet result = preSt.executeQuery();
+            if (result.next()) {
+
+                if (PassHash.verifyPassword(password, result.getString(1))) {
+                    return true;
+                } else
+                    System.out.println("Wrong Credential!\n");
             }
-        } else
-            System.out.println("Sorry, user not exists.\n");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -151,23 +156,24 @@ public class UserActions {
                 break;
             }
 
-            boolean isSuccessfull = UserActions.setUser(name, email, password);
-            if (isSuccessfull) {
+            boolean isSuccessful = UserActions.setUser(name, email, password);
+            if (isSuccessful) {
                 break;
             } else {
-                System.out.println("Someting went wrong!\n");
+                System.out.println("Something went wrong!\n");
             }
         }
         return true;
     }
 
     private static boolean setUser(String name, String email, String password) {
+        String hashedPassword = PassHash.hashPassword(password);
         Connection conn = DB.connect();
         try {
             PreparedStatement preSt = conn.prepareStatement(Query.addUser);
             preSt.setString(1, name);
             preSt.setString(2, email);
-            preSt.setString(3, password);
+            preSt.setString(3, hashedPassword);
             preSt.executeUpdate();
             setSavings(getUserID(), "inactive", 0.0, 0.0);
             setAccountBalance(getUserID(), 0.0);
@@ -179,7 +185,7 @@ public class UserActions {
 
     }
 
-    /*=========Savings============= */
+    /* =========Savings============= */
 
     private static void setSavings(int userID, String status, double percentage, double savedBalance) {
         Connection conn = DB.connect();
@@ -309,7 +315,7 @@ public class UserActions {
             }
         }
     }
-    
+
     public static boolean setSavingsForCurrentUser(String status, double percentage, double savedBalance) {
         int userID = getUserID();
         if (userID == -1) {
@@ -320,7 +326,7 @@ public class UserActions {
         return true;
     }
 
-    public static void transferSavings(){
+    public static void transferSavings() {
         LocalDate date = LocalDate.now();
         int dayOfMonth = date.getDayOfMonth();
         int daysInMonth = date.lengthOfMonth();
@@ -334,8 +340,8 @@ public class UserActions {
             }
         }
     }
-    
-    /*==========TRANSACTIONS================= */
+
+    /* ==========TRANSACTIONS================= */
     public static boolean debit(double amount, String description, LocalDate date) {
         String type = "debit";
         int userID = getUserID();
@@ -466,7 +472,7 @@ public class UserActions {
         }
         return 0;
     }
-    
+
     private static void setAccountBalance(int userID, double balance) {
         Connection conn = DB.connect();
         try {
@@ -478,15 +484,58 @@ public class UserActions {
             e.printStackTrace();
         }
     }
-    
-    /*==========TRANSACTION HISTORY================= */
-    public static List<Transaction> getTransactionHistory() {
+
+    /* ==========TRANSACTION HISTORY================= */
+    public static List<Transaction> getTransactionHistory(LocalDate startDate, LocalDate endDate,
+            String transactionType, double minAmount, double maxAmount, String sortBy, boolean ascending) {
         int userId = getUserID();
         List<Transaction> transactions = new ArrayList<>();
         Connection conn = DB.connect();
         try {
-            PreparedStatement preSt = conn.prepareStatement("SELECT * FROM transactions WHERE user_id = ?");
-            preSt.setInt(1, userId);
+            StringBuilder query = new StringBuilder("SELECT * FROM transactions WHERE user_id = ?");
+            if (startDate != null) {
+                query.append(" AND date >= ?");
+            }
+            if (endDate != null) {
+                query.append(" AND date <= ?");
+            }
+            if (transactionType != null && !transactionType.isEmpty()) {
+                query.append(" AND transaction_type = ?");
+            }
+            if (minAmount > 0) {
+                query.append(" AND amount >= ?");
+            }
+            if (maxAmount > 0) {
+                query.append(" AND amount <= ?");
+            }
+            if ("date".equalsIgnoreCase(sortBy)) {
+                query.append(" ORDER BY date");
+            } else if ("amount".equalsIgnoreCase(sortBy)) {
+                query.append(" ORDER BY amount");
+            }
+            if (!ascending) {
+                query.append(" DESC");
+            }
+
+            PreparedStatement preSt = conn.prepareStatement(query.toString());
+            int paramIndex = 1;
+            preSt.setInt(paramIndex++, userId);
+            if (startDate != null) {
+                preSt.setDate(paramIndex++, Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                preSt.setDate(paramIndex++, Date.valueOf(endDate));
+            }
+            if (transactionType != null && !transactionType.isEmpty()) {
+                preSt.setString(paramIndex++, transactionType);
+            }
+            if (minAmount > 0) {
+                preSt.setDouble(paramIndex++, minAmount);
+            }
+            if (maxAmount > 0) {
+                preSt.setDouble(paramIndex++, maxAmount);
+            }
+
             ResultSet result = preSt.executeQuery();
             while (result.next()) {
                 Transaction transaction = new Transaction();
@@ -510,10 +559,43 @@ public class UserActions {
                 e.printStackTrace();
             }
         }
+
         return transactions;
     }
 
-    /*==========LOANS================= */
+    public static List<Transaction> getTransactionHistory_FilterByDateRange(LocalDate startDate, LocalDate endDate) {
+        //LocalDate startDate = LocalDate.of(2023, 1, 1);
+        //LocalDate endDate = LocalDate.of(2023, 1, 31);
+        List<Transaction> transactions = UserActions.getTransactionHistory(startDate, endDate, null, 0, 0, null, true);
+        return transactions;
+    }
+    
+    public static List<Transaction> getTransactionHistory_FilterByTransactionType(String transactionType) {
+        //String transactionType = "debit";
+        List<Transaction> transactions = UserActions.getTransactionHistory(null, null, transactionType, 0, 0, null,
+                true);
+        return transactions;
+    }
+
+    public static List<Transaction> getTransactionHistory_FilterByAmountRange(double minAmount, double maxAmount) {
+        //double minAmount = 50.0;
+        //double maxAmount = 200.0;
+        List<Transaction> transactions = UserActions.getTransactionHistory(null, null, null, minAmount, maxAmount, null,
+                true);
+        return transactions;
+    }
+
+    public static List<Transaction> getTransactionHistory_SortByDate() {
+        List<Transaction> transactions = UserActions.getTransactionHistory(null, null, null, 0, 0, "date", true);
+        return transactions;
+    }
+
+    public static List<Transaction> getTransactionHistory_SortByAmount() {
+        List<Transaction> transactions = UserActions.getTransactionHistory(null, null, null, 0, 0, "amount", true);
+        return transactions;
+    }
+
+    /* ==========LOANS================= */
     public static boolean applyLoan(double principalAmount, double interestRate, int repaymentPeriod) {
         int userID = getUserID();
         if (userID == -1) {
@@ -539,9 +621,9 @@ public class UserActions {
             preSt.executeUpdate();
 
             debit(principalAmount, "Loan disbursement", LocalDate.now());
-            
+
             System.out.println("Loan applied successfully!");
-            
+
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -611,7 +693,7 @@ public class UserActions {
                 double outstandingBalance = result.getDouble("outstanding_balance");
                 return outstandingBalance;
             } else {
-                //System.out.println("No active loan found.");
+                // System.out.println("No active loan found.");
                 return 0;
             }
         } catch (SQLException e) {
@@ -636,7 +718,7 @@ public class UserActions {
                 double monthlyInstallment = result.getDouble("monthly_installment");
                 return monthlyInstallment;
             } else {
-                //System.out.println("No active loan found.");
+                // System.out.println("No active loan found.");
                 return 0;
             }
         } catch (SQLException e) {
@@ -659,13 +741,13 @@ public class UserActions {
             ResultSet result = preSt.executeQuery();
             if (result.next()) {
                 double principalAmount = result.getDouble("principal_amount");
-                return principalAmount;                
+                return principalAmount;
             } else {
-                //System.out.println("No active loan found.");
+                // System.out.println("No active loan found.");
                 return 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();   
+            e.printStackTrace();
         }
         return 0;
     }
@@ -691,8 +773,8 @@ public class UserActions {
         }
         return false;
     }
-    
-    public static boolean delayedRepay(){
+
+    public static boolean delayedRepay() {
         int userID = getUserID();
         if (userID == -1) {
             System.out.println("User does not exist.");
@@ -700,18 +782,18 @@ public class UserActions {
         }
 
         Connection conn = DB.connect();
-       try {
+        try {
             PreparedStatement preSt = conn.prepareStatement(Query.getLoan);
             preSt.setInt(1, userID);
             ResultSet result = preSt.executeQuery();
             if (result.next()) {
                 boolean delayed = result.getBoolean("delayed_repayment");
-                return delayed;                
+                return delayed;
             } else {
                 System.out.println("No active loan found.");
             }
         } catch (SQLException e) {
-            e.printStackTrace();   
+            e.printStackTrace();
         }
         return false;
     }
@@ -738,5 +820,48 @@ public class UserActions {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    /* ============= Loan Notification================ */
+    public static LocalDate lastPaymentDate() {
+        LocalDate lastPaymentDate = null;
+
+        Connection conn = DB.connect();
+        try {
+            PreparedStatement preSt = conn.prepareStatement(Query.getLoan);
+            preSt.setInt(1, getUserID());
+            ResultSet result = preSt.executeQuery();
+            if (result.next()) {
+                lastPaymentDate = result.getDate("last_payment_date").toLocalDate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return lastPaymentDate;
+    }
+
+    public static void checkOverdueInstallments() {
+        LocalDate today = LocalDate.now();
+        double monthlyInstallment = getMonthlyInstallment();
+
+        if (UserActions.getOverdueInstallments() > 0) {
+            System.out.println("NOTICE: You have overdue installments. Your transactions are currently suspended!");
+            System.out.println("Overdue installments: " + UserActions.getOverdueInstallments() + " months");
+            monthlyInstallment *= UserActions.getOverdueInstallments();
+        } else if (lastPaymentDate() != null) {
+            LocalDate nextPaymentDate = lastPaymentDate().plusMonths(1);
+            if (!today.isAfter(nextPaymentDate) && nextPaymentDate.minusDays(7).isBefore(today)) {
+                System.out.println("🔔 Reminder: Your loan repayment of $" + monthlyInstallment +
+                        " is due on " + nextPaymentDate + ". Please pay on time to avoid penalties.");
+            }
+        }
     }
 }
