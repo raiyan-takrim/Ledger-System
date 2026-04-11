@@ -1,12 +1,15 @@
+import io.github.cdimascio.dotenv.Dotenv;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DB {
     public static Connection connect() {
-        String url = "jdbc:postgresql://ep-cool-frog-a1i885rb.ap-southeast-1.aws.neon.tech:5432/verceldb";
-        String user = "default";
-        String password = "BGy1iEgA8OWu";
+        Dotenv dotenv = Dotenv.load();
+        String url = dotenv.get("DB_URL");
+        String user = dotenv.get("DB_USER");
+        String password = dotenv.get("DB_PASSWORD");
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(url, user, password);
