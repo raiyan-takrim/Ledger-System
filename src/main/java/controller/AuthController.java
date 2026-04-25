@@ -11,8 +11,8 @@ public class AuthController {
     public boolean register(String name, String email, String password) {
         return authService.register(name, email, password);
     }
-    public void login(String email, String password) {
-        throw new UnsupportedOperationException("Unimplemented method 'login'");
+    public boolean login(String email, String password) {
+        return authService.login(email, password);
     }
     public void logout() {
         throw new UnsupportedOperationException("Unimplemented method 'logout'");

@@ -1,4 +1,5 @@
 package view;
+
 import java.util.Scanner;
 import controller.AuthController;
 
@@ -22,8 +23,10 @@ public class AuthView {
             int choice = readChoice();
             switch (choice) {
                 case 1:
-                    // Implement login logic here
-                    throw new UnsupportedOperationException("Login functionality not implemented yet.");
+                    if (handleLogin()) {
+                        System.out.println("Login Successful!!!");
+                    }
+                    break;
                 case 2:
                     if (handleRegister()) {
                         System.out.println("\nRegistration Successful!!!");
@@ -70,5 +73,16 @@ public class AuthView {
             System.out.println(e.getMessage() + "\n");
             return false;
         }
+    }
+
+    private static boolean handleLogin() {
+        System.out.println("== Login ==");
+        String email = prompt("Email: ");
+        String password = prompt("Password: ");
+        boolean success = authController.login(email, password);
+        if (!success) {
+            System.out.println("Wrong credentials or user does not exist.\n");
+        }
+        return success;
     }
 }
