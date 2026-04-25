@@ -1,20 +1,26 @@
 package model;
 
 import java.sql.Date;
+import java.util.UUID;
 
 public class User {
+    private UUID id;
     private String name;
     private String email;
     private String hashedPassword;
     private Date createdAt;
     private Date updatedAt;
 
-    public User(String name, String email, String hashedPassword) {
+    public User(UUID id, String name, String email, String hashedPassword) {
+        this.id = id;
         this.name = name;
         this.email = email;
         this.hashedPassword = hashedPassword;
         this.createdAt = new Date(System.currentTimeMillis());
         this.updatedAt = new Date(System.currentTimeMillis());
+    }
+    public UUID getId() {
+        return id;
     }
     public String getName() {
         return name;

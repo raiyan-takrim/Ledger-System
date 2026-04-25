@@ -1,7 +1,11 @@
-import view.Screens;
+import view.AuthView;
 
 public class App {
     public static void main(String[] args) {
-        Screens.LoginRegScreen();
+        try {
+            AuthView.authScreen();
+        } finally {
+            config.DB.close();
+        }
     }
 }

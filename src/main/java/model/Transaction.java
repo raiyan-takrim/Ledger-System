@@ -9,7 +9,6 @@ public class Transaction {
     private double amount;
     private Date transactionDate;
     private String description;
-    // private double updatedAmount;
 
     public Transaction(User user, TransactionType type, double amount, Date transactionDate, String description) {
         this.transactionId = UUID.randomUUID();
@@ -43,8 +42,4 @@ public class Transaction {
     public String getDescription() {
         return description;
     }
-
-    // public double getUpdatedAmount() {
-    //     return updatedAmount;
-    // }
 }
