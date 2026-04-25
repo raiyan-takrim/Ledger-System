@@ -1,4 +1,7 @@
+package view;
 import java.util.Scanner;
+
+import UserActions;
 
 public class Screens {
     public static void LoginRegScreen() {

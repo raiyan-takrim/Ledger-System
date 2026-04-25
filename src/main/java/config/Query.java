@@ -1,3 +1,4 @@
+package config;
 public class Query {
     static String getUserID = "SELECT user_id FROM users WHERE email = ?";
     static String addUser = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";

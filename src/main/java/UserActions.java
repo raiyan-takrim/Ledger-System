@@ -8,6 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import config.DB;
+import config.Query;
+import model.Transaction;
+import utility.PassHash;
+import utility.Validation;
+
 public class UserActions {
     public static String email;
     public static String name, password, confirmPassword;

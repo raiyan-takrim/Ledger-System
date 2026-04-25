@@ -1,3 +1,4 @@
+package utility;
 
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.gensalt;

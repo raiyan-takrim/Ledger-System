@@ -1,3 +1,4 @@
+package view;
 import java.io.FileWriter;
 import java.net.Socket;
 import java.time.LocalDate;
@@ -5,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
+
+import model.Transaction;
 
 public class TransactionMethods {
     private static Scanner input = new Scanner(System.in);
