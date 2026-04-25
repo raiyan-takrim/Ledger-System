@@ -39,12 +39,16 @@ public class AuthService {
     }
 
     public boolean login(String email, String password) {
-        // Implement login logic here
-        throw new UnsupportedOperationException("Login functionality not implemented yet.");
+        User user = userRepository.authenticateUser(email, password);
+        if (user != null) {
+            SessionManager.getInstance().createSession(user);
+            return true;
+        }
+        return false;
     }
 
     public boolean logout() {
         // Implement logout logic here
-        throw new UnsupportedOperationException("Logout functionality not implemented yet.");
+        return SessionManager.getInstance().logout();
     }
 }

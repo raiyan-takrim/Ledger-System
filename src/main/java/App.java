@@ -1,3 +1,4 @@
+import service.SessionManager;
 import view.AuthView;
 
 public class App {
@@ -5,6 +6,7 @@ public class App {
         try {
             AuthView.authScreen();
         } finally {
+            SessionManager.getInstance().destroySession();
             config.DB.close();
         }
     }
